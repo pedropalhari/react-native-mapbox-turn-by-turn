@@ -36,9 +36,85 @@ dependencies {
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
-- copiar `MapboxDirectionsModule.java` e `MapboxDirectionsPackage.java` para a mesma pasta do seu `MainApplication.java`.
+- adicionar ao `android/app/src/main/res/values/strings.xml` as seguintes chaves:
 
-- trocar o `package` do `MapboxDirectionsModule.java` e `MapboxDirectionsPackage.java` de `com.mapboxdirections` para o mesmo do seu `MainApplication.java`.
+```xml
+<resources>
+  ...
+  <!-- aqui dentro -->
+  <string name="title_mock_navigation">Mock Navigation</string>
+  <string name="description_mock_navigation">Mock a navigation session using a mock location engine.</string>
+
+  <string name="title_off_route_detection">Off route detection</string>
+  <string name="description_off_route_detection">Uses the Route Utils class to determine if a users off route.</string>
+
+  <string name="title_reroute">Reroute</string>
+  <string name="description_reroute">Test the reroute function inside the navigation SDK</string>
+
+  <string name="title_navigation_route_ui">Navigation Map Route</string>
+  <string name="description_navigation_route_ui">Shows different styles using NavigationMapRoute</string>
+
+  <string name="title_navigation_launcher">Navigation Launcher</string>
+  <string name="description_navigation_launcher">Drop-in UI experience</string>
+
+  <string name="title_end_navigation">End Navigation</string>
+  <string name="description_end_navigation">Shows how to end navigation using NavigationView</string>
+
+  <string name="title_dual_navigation_map">Dual Navigation Map</string>
+  <string name="description_dual_navigation_map">Shows how to add NavigationView and MapView in the same layout</string>
+
+  <string name="title_waypoint_navigation">Waypoint Navigation</string>
+  <string name="description_waypoint_navigation">Navigation with waypoints between destinations</string>
+
+  <string name="title_embedded_navigation">Embedded Navigation</string>
+  <string name="description_embedded_navigation">Navigation in a view which contains other views</string>
+
+  <string name="title_fragment_navigation">NavigationView implemented with Fragment</string>
+  <string name="description_fragment_navigation">NavigationView implemented with Fragment</string>
+
+  <string name="title_component_navigation">MapboxNavigation with UI components</string>
+  <string name="description_component_navigation">MapboxNavigation with UI components</string>
+
+  <string name="settings">Settings</string>
+  <string name="simulate_route">Simulate Route</string>
+  <string name="language">Language</string>
+  <string name="unit_type">Unit Type</string>
+  <string name="route_profile">Route Profile</string>
+
+  <string name="unit_type_key" translatable="false">unit_type</string>
+  <string name="simulate_route_key" translatable="false">simulate_route</string>
+  <string name="language_key" translatable="false">language</string>
+  <string name="route_profile_key" translatable="false">route_profile</string>
+  <string name="offline_preference_key"
+      translatable="false">offline_preference_key</string>
+  <string name="view_examples_key" translatable="false">view_examples</string>
+  <string name="default_locale" translatable="false">default_for_device</string>
+  <string name="default_unit_type" translatable="false">default_for_device</string>
+  <string name="current_night_mode" translatable="false">current_night_mode</string>
+  <string name="was_in_tunnel" translatable="false">was_in_tunnel</string>
+  <string name="was_navigation_stopped" translatable="false">was_navigation_stopped</string>
+
+  <string name="error_route_not_available">Current route is not available</string>
+  <string name="error_select_longer_route">Please select a longer route</string>
+  <string name="error_valid_route_not_found">Valid route not found.</string>
+  <string name="explanation_long_press_waypoint">Long press map to place waypoint</string>
+
+  <string name="blue" translatable="false">#4264fb</string>
+
+  <string name="hint_where_to">Where to?</string>
+  <string name="offline_routing">Offline routing</string>
+  <string name="autocompleteBehavior" translatable="false">com.mapbox.services.android.navigation.testapp.example.ui.autocomplete.AutocompleteBottomSheetBehavior</string>
+</resources>
+
+```
+
+- jogar o arquivo `dimens.xml` junto com o `strings.xml` em `android/app/src/main/res/values/`.
+
+- jogar o arquivo `activity_embedded_navigation.xml` em `android/app/src/main/res/layout/`.
+
+- copiar `MapboxDirectionsModule.java`, `MapboxDirectionsPackage.java` e `MapboxActivity.java` para a mesma pasta do seu `MainApplication.java`.
+
+- trocar o `package` do `MapboxDirectionsModule.java`, `MapboxDirectionsPackage.java` e `MapboxActivity.java` de `com.mapboxdirections` para o mesmo do seu `MainApplication.java`.
 
 ```Java
 package com.mapboxdirections; //Antigo
@@ -103,15 +179,15 @@ public class MainApplication extends Application implements ReactApplication {
 
 Chama a API, deve ser executada somente uma vez no código inteiro e inicializa o objeto nativo `Mapbox`
 
-- `navigateFromTo(from: {lat: number, to: number}, to: {lat: number, to: number})`
+- `navigateFromTo(from: {lat: number, to: number}, to: {lat: number, to: number}): Promise<boolean>`
 
-Chama a janela de navegação da posição `from` até a posição `to`.
+Chama a janela de navegação da posição `from` até a posição `to`. Retorna uma Promise que vai resolver `true` se tiver chegado ao destino final ou `false` caso tenha saido da navegação.
 
 ## Developing
 
 Basicamente copiado o https://docs.mapbox.com/help/tutorials/android-navigation-sdk/, isolando somente a parte do navegação. Conforme os erros de androidx foram aparecendo, fui substituindo as bibliotecas.
 
-Para pegar a MainActivity no React é utilizado `getReactApplicationContext().getCurrentActivity()` dentro da classe. Para rodar na *thread UI* requerida, são usados spawners nas duas funções da API, como exemplo:
+Para pegar a MainActivity no React é utilizado `getReactApplicationContext().getCurrentActivity()` dentro da classe. Para rodar na _thread UI_ requerida, são usados spawners nas duas funções da API, como exemplo:
 
 ```java
   @ReactMethod

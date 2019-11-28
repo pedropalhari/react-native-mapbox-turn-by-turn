@@ -1,7 +1,10 @@
 package com.mapboxdirections;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.widget.Toast;
 
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -45,6 +48,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 
 // classes to calculate a route
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions;
+import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener;
 import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute;
 import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute;
 import com.mapbox.api.directions.v5.models.DirectionsResponse;
@@ -59,16 +63,18 @@ import android.view.View;
 import android.widget.Button;
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher;
 
-public class MapboxDirectionsModule extends ReactContextBaseJavaModule {
+public class MapboxDirectionsModule extends ReactContextBaseJavaModule implements ActivityEventListener {
   private static ReactApplicationContext reactContext;
 
   private static final String DURATION_SHORT_KEY = "SHORT";
   private static final String DURATION_LONG_KEY = "LONG";
   private DirectionsRoute currentRoute;
+  com.facebook.react.bridge.Callback navigationCallback;
 
   MapboxDirectionsModule(ReactApplicationContext context) {
     super(context);
     reactContext = context;
+    reactContext.addActivityEventListener(this);
   }
 
   @Override
@@ -87,8 +93,12 @@ public class MapboxDirectionsModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void navigateFromTo(Double fromLong, Double fromLat, Double toLong, Double toLat) {
+  public void navigateFromTo(Double fromLong, Double fromLat, Double toLong, Double toLat, com.facebook.react.bridge.Callback cb) {
     // Toast.makeText(getReactApplicationContext(), message, duration).show();
+
+    Log.d("RRRR", "rodando!!!!");
+
+    navigationCallback = cb;
 
     getCurrentActivity().runOnUiThread(() -> {
       //getRoute(Point.fromLngLat(-45.453680, -22.4238269), Point.fromLngLat(-45.4496699, -22.4138284F));
@@ -96,35 +106,37 @@ public class MapboxDirectionsModule extends ReactContextBaseJavaModule {
     });
   }
 
+
   private void getRoute(Point origin, Point destination) {
-    NavigationRoute.builder(getReactApplicationContext().getCurrentActivity()).accessToken(Mapbox.getAccessToken())
-        .origin(origin).destination(destination).build().getRoute(new Callback<DirectionsResponse>() {
-          @Override
-          public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
-            // You can get the generic HTTP info about the response
-            Log.d("MAPBOX", "Response code: " + response.code());
-            if (response.body() == null) {
-              Log.e("MAPBOX", "No routes found, make sure you set the right user and access token.");
-              return;
-            } else if (response.body().routes().size() < 1) {
-              Log.e("MAPBOX", "No routes found");
-              return;
-            }
 
-            currentRoute = response.body().routes().get(0);
+    Intent intent = new Intent(getReactApplicationContext().getCurrentActivity(), MapboxActivity.class);
+    double[] points = {origin.latitude(), origin.longitude(), destination.latitude(), destination.longitude()};
+    intent.putExtra("latLongs", points);
+    getReactApplicationContext().getCurrentActivity().startActivityForResult(intent, 1);
 
-            boolean simulateRoute = false;
-            NavigationLauncherOptions options = NavigationLauncherOptions.builder().directionsRoute(currentRoute)
-                .shouldSimulateRoute(simulateRoute).build();
-            // Call this method with Context from within an Activity
-            NavigationLauncher.startNavigation(getReactApplicationContext().getCurrentActivity(), options);
+  }
 
-          }
 
-          @Override
-          public void onFailure(Call<DirectionsResponse> call, Throwable throwable) {
-            Log.e("MAPBOX", "Error: " + throwable.getMessage());
-          }
-        });
+  @Override
+  public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+    Log.d("RRRR", "VOLTOU");
+
+    final int RESULT_OK = -1;
+    final int RESULT_CANCELED = 0;
+
+    if (requestCode == 1) {
+      if (resultCode == RESULT_OK) {
+        navigationCallback.invoke(true);
+
+      }
+      if (resultCode == RESULT_CANCELED) {
+        navigationCallback.invoke(false);
+      }
+    }
+  }
+
+  @Override
+  public void onNewIntent(Intent intent) {
+
   }
 }
